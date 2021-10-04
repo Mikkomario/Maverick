@@ -33,8 +33,8 @@ object CollectUpdate
 	 * @param notChanged Exports of modules which didn't have any updates
 	 * @return Success or failure
 	 */
-	// TODO: Add support for patch-style update (only single module was updated)
-	def apply(updatesDirectory: Path, updates: Seq[ModuleUpdate], notChanged: Seq[ModuleExport]) =
+	def apply(updatesDirectory: Path, updates: Seq[ModuleUpdate], notChanged: Seq[ModuleExport] = Vector(),
+	          summaryAdditions: Map[ModuleUpdate, Seq[String]] = Map()) =
 	{
 		// Creates the update directory
 		updatesDirectory.asExistingDirectory.flatMap { updateDir =>
@@ -44,8 +44,10 @@ object CollectUpdate
 			if (updates.size == 1)
 			{
 				val update = updates.head
-				changeDocumentPath.writeLines(s"# ${update.module.name} ${update.version}" +: update.changeDocLines)
-					.flatMap { _ => collectArtifacts(updateDir, Vector(update.wrapped)) }
+				changeDocumentPath.writeLines(
+					(s"# ${update.module.name} ${update.version}" +:
+						summaryAdditions.getOrElse(update, Vector())) ++ update.changeDocLines
+				).flatMap { _ => collectArtifacts(updateDir, Vector(update.wrapped)) }
 			}
 			else
 			{
@@ -53,14 +55,15 @@ object CollectUpdate
 				val orderedUpdates = updates.sortedWith(applicationOrdering, updateLevelOrdering, alphabeticalOrdering)
 				val orderedNotChanged = notChanged.sortBy { _.isApplication }.sortBy { _.module.name }
 				// Writes the change document, then collects the binaries
-				writeChanges(changeDocumentPath, orderedUpdates, orderedNotChanged).flatMap { _ =>
+				writeChanges(changeDocumentPath, orderedUpdates, orderedNotChanged, summaryAdditions).flatMap { _ =>
 					collectArtifacts(updateDir/"binaries", orderedUpdates.map { _.wrapped } ++ orderedNotChanged)
 				}
 			}
 		}
 	}
 	
-	private def writeChanges(path: Path, updates: Iterable[ModuleUpdate], notChanged: Iterable[ModuleExport]) =
+	private def writeChanges(path: Path, updates: Iterable[ModuleUpdate], notChanged: Iterable[ModuleExport],
+	                         summaryAdditions: Map[ModuleUpdate, Seq[String]]) =
 		path.writeUsing { writer =>
 			writer.println("# Summary")
 			writer.println("TODO: Write summary")
@@ -85,6 +88,7 @@ object CollectUpdate
 			updates.foreach { update =>
 				writer.println()
 				writer.println(s"## ${update.module.name} ${update.version}")
+				summaryAdditions.get(update).foreach(writer.println)
 				update.changeDocLines.foreach(writer.println)
 			}
 		}

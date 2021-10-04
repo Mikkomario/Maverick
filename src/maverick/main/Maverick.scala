@@ -160,7 +160,7 @@ object Maverick extends App
 							val targetDirectory = ask(s"Please specify the directory where data should be collected (default = $defaultDirectory)")
 								.notEmpty.map[Path] { s => s }.getOrElse(defaultDirectory)
 							
-							CollectUpdate(targetDirectory, updated, notChanged) match
+							CollectUpdate(targetDirectory, updated, notChanged, addedSummaries) match
 							{
 								case Success(_) =>
 									println("Update collected successfully")

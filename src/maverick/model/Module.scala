@@ -16,7 +16,7 @@ object Module
  * @author Mikko Hilpinen
  * @since 3.10.2021, v0.1
  */
-case class Module(name: String, projectName: String, changeListPath: Path, artifactDirectory: Path)
+case class Module(name: String, changeListPath: Path, artifactDirectory: Path)
 {
 	/**
 	 * @return Whether this module exports full applications and not just individual jar files

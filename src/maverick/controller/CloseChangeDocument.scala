@@ -30,13 +30,15 @@ object CloseChangeDocument
 	 * @param module Targeted module
 	 * @return Path to the edited change list document. Failure if change list editing failed.
 	 */
-	def apply(module: Module) =
+	def apply(module: Module, summaryLines: Seq[String] = Vector()) =
 		module.changeListPath.edit { editor =>
 			// Finds the development version line and overwrites it
-			editor.mapNextWhere(developmentVersionLineRegex.apply) { original =>
+			editor.flatMapNextWhere(developmentVersionLineRegex.apply) { original =>
 				// Replaces the part after the version number with a release date
+				// May also add extra summary lines
 				val versionEndIndex = Version.regex.endIndexIteratorIn(original).next()
-				original.take(versionEndIndex) + " - " + Today.toLocalDate.format(dateFormat)
+				val newHeader = original.take(versionEndIndex) + " - " + Today.toLocalDate.format(dateFormat)
+				newHeader +: summaryLines
 			}
 		}
 }

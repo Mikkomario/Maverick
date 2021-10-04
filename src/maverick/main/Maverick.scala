@@ -1,6 +1,7 @@
 package maverick.main
 
 import maverick.controller.{CheckForUpdates, CloseChangeDocument, CollectUpdate, FindModules}
+import maverick.model.ModuleUpdate
 import utopia.flow.generic.DataType
 import utopia.flow.time.Today
 import utopia.flow.util.CollectionExtensions._
@@ -121,10 +122,39 @@ object Maverick extends App
 						}
 						println()
 						
-						// TODO: Should make sure that the modules have a summary line
+						// Checks whether any modules are missing a summary
+						val missingSummaryModules = updated
+							.filter { _.changeDocLines.headOption.forall { _.startsWith("#") } }
+						if (missingSummaryModules.nonEmpty)
+							println(s"The following ${missingSummaryModules.size} modules are missing a summary: ${
+								missingSummaryModules.map { _.module.name }.mkString(", ")}")
+						
+						// Makes sure the user wants to complete the process
 						if (askBoolean("Would you like to continue (finalize) the export process?",
 							default = true))
 						{
+							// Checks whether the user would like to fill in the missing summaries (if there are any)
+							val addedSummaries: Map[ModuleUpdate, Vector[String]] =
+							{
+								// Case: No summaries are missing or the user doesn't want to write any => continues
+								if (missingSummaryModules.isEmpty || !askBoolean(s"Do you want to write the ${
+									missingSummaryModules.size} summaries now?"))
+									Map()
+								// Case: User wants to write the missing summaries => collects them one by one
+								else
+									missingSummaryModules.flatMap { update =>
+										// Prints update details before each question
+										println(s"${update.module.name} ${update.version} (${update.updateType})")
+										update.changeDocLines.foreach(println)
+										println()
+										println(s"${update.module.name} changes are listed above, please write the summary.")
+										val summary = ask("Hint: £-signs will be replaced with line breaks")
+										summary.notEmpty.map { summary =>
+											update -> summary.split('£').toVector
+										}
+									}.toMap
+							}
+							
 							// Collects the update files to a directory (user may choose)
 							val defaultDirectory: Path = s"${projectDirectory.fileName}/$Today"
 							val targetDirectory = ask(s"Please specify the directory where data should be collected (default = $defaultDirectory)")
@@ -135,11 +165,15 @@ object Maverick extends App
 								case Success(_) =>
 									println("Update collected successfully")
 									// "Closes" the export process (if user wants to)
-									if (askBoolean("Do you want the change list documents edited with today as the latest release date (replacing 'dev' status)?",
+									// NB: This process can't be cancelled if the user wrote summaries
+									// (because data would otherwise be lost)
+									if (addedSummaries.nonEmpty || askBoolean(
+										"Do you want the change list documents edited with today as the latest release date (replacing 'dev' status)?",
 										default = true))
 									{
 										val closeResults = updated.map { update =>
-											update -> CloseChangeDocument(update.module)
+											update -> CloseChangeDocument(update.module,
+												addedSummaries.getOrElse(update, Vector()))
 										}
 										val failureResults = closeResults
 											.flatMap { case (update, result) => result.failure.map { update -> _ } }

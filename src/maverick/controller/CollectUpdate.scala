@@ -19,6 +19,7 @@ object CollectUpdate
 	
 	private val ignoredApplicationFileTypes = Set("7z", "zip", "rar")
 	
+	private val applicationOrdering = Ordering.by { update: ModuleUpdate => !update.isApplication }
 	private val updateLevelOrdering = Ordering.by { update: ModuleUpdate => update.updateType }
 	private val alphabeticalOrdering = Ordering.by { update: ModuleUpdate => update.module.name }
 	
@@ -37,17 +38,28 @@ object CollectUpdate
 	{
 		// Creates the update directory
 		updatesDirectory.asExistingDirectory.flatMap { updateDir =>
-			// Orders the modules based on update level and alphabetical order
-			val orderedUpdates = updates.sortedWith(updateLevelOrdering, alphabeticalOrdering)
-			val orderedNotChanged = notChanged.sortBy { _.module.name }
-			// Writes the change document, then collects the binaries
-			writeChanges(updateDir/"Changes.md", orderedUpdates, orderedNotChanged).flatMap { _ =>
-				collectArtifacts(updateDir/"binaries", orderedUpdates.map { _.wrapped } ++ orderedNotChanged)
+			val changeDocumentPath = updateDir/"Changes.md"
+			
+			// In case there is only one updated module, goes into "patch mode", releasing that model separately
+			if (updates.size == 1)
+			{
+				val update = updates.head
+				changeDocumentPath.writeLines(s"# ${update.module.name} ${update.version}" +: update.changeDocLines)
+					.flatMap { _ => collectArtifacts(updateDir, Vector(update.wrapped)) }
+			}
+			else
+			{
+				// Orders the modules based on update level and alphabetical order
+				val orderedUpdates = updates.sortedWith(applicationOrdering, updateLevelOrdering, alphabeticalOrdering)
+				val orderedNotChanged = notChanged.sortBy { _.isApplication }.sortBy { _.module.name }
+				// Writes the change document, then collects the binaries
+				writeChanges(changeDocumentPath, orderedUpdates, orderedNotChanged).flatMap { _ =>
+					collectArtifacts(updateDir/"binaries", orderedUpdates.map { _.wrapped } ++ orderedNotChanged)
+				}
 			}
 		}
 	}
 	
-	// TODO: Probably should divide into application vs. module updates
 	private def writeChanges(path: Path, updates: Iterable[ModuleUpdate], notChanged: Iterable[ModuleExport]) =
 		path.writeUsing { writer =>
 			writer.println("# Summary")

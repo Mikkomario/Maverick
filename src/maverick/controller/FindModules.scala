@@ -44,7 +44,6 @@ object FindModules
 			val artifactsDirectory = projectDirectory/"out/artifacts"
 			// Finds all possible specific artifact directories
 			artifactsDirectory.iterateChildren { _.filter { _.isDirectory }.toVector }.map { artifactDirectories =>
-				val projectName = nameSplitterRegex.split(projectDirectory.fileName).mkString(" ")
 				// Finds, which artifact directory matches with which module
 				modulePaths.dividedWith { case (moduleDir, changeListPath) =>
 					// Splits the module name so that searching is more flexible
@@ -70,7 +69,7 @@ object FindModules
 					{
 						// Case: Matching directory found
 						case Some(artifactDirectory) =>
-							Left(Module(moduleName, projectName, changeListPath, artifactDirectory))
+							Left(Module(moduleName, changeListPath, artifactDirectory))
 						// Case: No matching directory found
 						case None => Right(moduleName)
 					}

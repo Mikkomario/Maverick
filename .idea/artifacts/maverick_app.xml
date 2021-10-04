@@ -10,6 +10,7 @@
         <element id="module-output" name="Flow" />
       </element>
       <element id="library" level="application" name="scala-sdk-2.13.3" />
+      <element id="file-copy" path="$PROJECT_DIR$/README.md" />
     </root>
   </artifact>
 </component>

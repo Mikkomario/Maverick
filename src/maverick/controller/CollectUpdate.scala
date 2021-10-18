@@ -7,6 +7,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 
 import java.nio.file.Path
+import scala.util.Success
 
 /**
  * Used for writing an update document and for collecting the updated files to a single place
@@ -19,7 +20,6 @@ object CollectUpdate
 	
 	private val ignoredApplicationFileTypes = Set("7z", "zip", "rar")
 	
-	private val applicationOrdering = Ordering.by { update: ModuleUpdate => !update.isApplication }
 	private val updateLevelOrdering = Ordering.by { update: ModuleUpdate => update.updateType }
 	private val alphabeticalOrdering = Ordering.by { update: ModuleUpdate => update.module.name }
 	
@@ -38,26 +38,47 @@ object CollectUpdate
 	{
 		// Creates the update directory
 		updatesDirectory.asExistingDirectory.flatMap { updateDir =>
-			val changeDocumentPath = updateDir/"Changes.md"
 			
-			// In case there is only one updated module, goes into "patch mode", releasing that model separately
-			if (updates.size == 1)
-			{
-				val update = updates.head
-				changeDocumentPath.writeLines(
-					(s"# ${update.module.name} ${update.version}" +:
-						summaryAdditions.getOrElse(update, Vector())) ++ update.changeDocLines
-				).flatMap { _ => collectArtifacts(updateDir, Vector(update.wrapped)) }
-			}
-			else
-			{
-				// Orders the modules based on update level and alphabetical order
-				val orderedUpdates = updates.sortedWith(applicationOrdering, updateLevelOrdering, alphabeticalOrdering)
-				val orderedNotChanged = notChanged.sortBy { _.isApplication }.sortBy { _.module.name }
-				// Writes the change document, then collects the binaries
-				writeChanges(changeDocumentPath, orderedUpdates, orderedNotChanged, summaryAdditions).flatMap { _ =>
-					collectArtifacts(updateDir/"binaries", orderedUpdates.map { _.wrapped } ++ orderedNotChanged)
+			// Divides the updates into application and module changes
+			val (moduleUpdates, applicationUpdates) = updates.divideBy { _.isApplication }
+			val unchangedModules = notChanged.filterNot { _.isApplication }
+			
+			// Writes the module changes, if there are any
+			val moduleWrite = if (moduleUpdates.isEmpty) Success(()) else
+				writeModules(updateDir, moduleUpdates, unchangedModules)
+			moduleWrite.flatMap { _ =>
+				// Writes the application updates, if there are any
+				applicationUpdates.tryForeach { update =>
+					applicationUpdate(updateDir, update, summaryAdditions.getOrElse(update, Vector()))
 				}
+			}
+		}
+	}
+	
+	// Call only if there are updates
+	private def writeModules(updatesDirectory: Path, updates: Seq[ModuleUpdate],
+	                         notChanged: Seq[ModuleExport] = Vector(),
+	                         summaryAdditions: Map[ModuleUpdate, Seq[String]] = Map()) =
+	{
+		val changeDocumentPath = updatesDirectory/"Changes.md"
+		
+		// In case there is only one updated module, goes into "patch mode", releasing that model separately
+		if (updates.size == 1)
+		{
+			val update = updates.head
+			changeDocumentPath.writeLines(
+				(s"# ${update.module.name} ${update.version}" +:
+					summaryAdditions.getOrElse(update, Vector())) ++ update.changeDocLines
+			).flatMap { _ => collectArtifacts(updatesDirectory, Vector(update.wrapped)) }
+		}
+		else
+		{
+			// Orders the modules based on update level and alphabetical order
+			val orderedUpdates = updates.sortedWith(updateLevelOrdering, alphabeticalOrdering)
+			val orderedNotChanged = notChanged.sortBy { _.module.name }
+			// Writes the change document, then collects the binaries
+			writeChanges(changeDocumentPath, orderedUpdates, orderedNotChanged, summaryAdditions).flatMap { _ =>
+				collectArtifacts(updatesDirectory/"binaries", orderedUpdates.map { _.wrapped } ++ orderedNotChanged)
 			}
 		}
 	}
@@ -98,25 +119,28 @@ object CollectUpdate
 		// Makes sure the targeted directory exists
 		path.asExistingDirectory.flatMap { path =>
 			// Attempts to copy each module
-			modules.tryForeach { export =>
-				export.jarPath match
-				{
-					// Case: Jar-based export => Copies the jar file
-					case Some(jarPath) => jarPath.copyTo(path).map { _ => () }
-					// Case: Application export =>
-					// Creates a new directory for the application and copies application files to it
-					case None =>
-						path.resolve(s"${export.module.name}-${export.version}").asExistingDirectory
-							.flatMap { dir =>
-								export.artifactDirectory.tryIterateChildren {
-									// Ignores zip files (expecting them to be zipped applications)
-									_.filterNot { file => ignoredApplicationFileTypes.contains(file.fileType) }
-										.tryForeach { _.copyTo(dir).map { _ => () } }
-								}
-							}
-				}
-			}
+			modules.tryForeach { export => export.jarPath.tryForeach { _.copyTo(path).map { _ => () } } }
 		}
+	}
+	
+	private def applicationUpdate(outputRoot: Path, application: ModuleUpdate, summaryAdditions: Seq[String]) =
+	{
+		outputRoot.resolve(s"${application.module.name}-${application.version}").asExistingDirectory
+			.flatMap { dir =>
+				// Copies the application jars and other files to a new folder
+				application.artifactDirectory.tryIterateChildren {
+					// Ignores zip files (expecting them to be zipped applications)
+					_.filterNot { file => ignoredApplicationFileTypes.contains(file.fileType) }
+						.tryForeach { _.copyTo(dir).map { _ => () } }
+				}.flatMap { _ =>
+					// Writes a change summary
+					dir.resolve("Changes.md").writeUsing { writer =>
+						writer.println("# Summary")
+						summaryAdditions.foreach(writer.println)
+						application.changeDocLines.foreach(writer.println)
+					}
+				}
+			}.map { _ => () }
 	}
 	
 	private def updateTypeDescription(updateType: UpdateType) = updateType match

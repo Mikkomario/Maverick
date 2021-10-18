@@ -50,7 +50,7 @@ object Maverick extends App
 	val projectDirectory: Path = args.headOption
 		.getOrElse[String] {
 			println("Please specify the project directory to export")
-			ask(s"Current directory: ${".".toAbsolutePath}")
+			ask(s"Current directory: ${"".toAbsolutePath}")
 		}
 	if (!projectDirectory.isDirectory)
 	{

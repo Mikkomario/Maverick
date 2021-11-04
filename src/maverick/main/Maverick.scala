@@ -164,6 +164,7 @@ object Maverick extends App
 							{
 								case Success(_) =>
 									println("Update collected successfully")
+									targetDirectory.openInDesktop()
 									// "Closes" the export process (if user wants to)
 									// NB: This process can't be cancelled if the user wrote summaries
 									// (because data would otherwise be lost)
@@ -187,7 +188,6 @@ object Maverick extends App
 									}
 									
 									println("Update process complete. Thanks for using Maverick!")
-									targetDirectory.openInDesktop()
 								
 								case Failure(error) =>
 									error.printStackTrace()

@@ -20,7 +20,7 @@ object CollectUpdate
 	
 	private val ignoredApplicationFileTypes = Set("7z", "zip", "rar")
 	
-	private val updateLevelOrdering = Ordering.by { update: ModuleUpdate => update.updateType }
+	private val updateLevelOrdering = Ordering.by { update: ModuleUpdate => update.updateType }.reverse
 	private val alphabeticalOrdering = Ordering.by { update: ModuleUpdate => update.module.name }
 	
 	

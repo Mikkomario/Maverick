@@ -45,7 +45,7 @@ object FindModules
 			// Finds all possible specific artifact directories
 			artifactsDirectory.iterateChildren { _.filter { _.isDirectory }.toVector }.map { artifactDirectories =>
 				// Finds, which artifact directory matches with which module
-				modulePaths.dividedWith { case (moduleDir, changeListPath) =>
+				modulePaths.divideWith { case (moduleDir, changeListPath) =>
 					// Splits the module name so that searching is more flexible
 					val moduleNameParts = nameSplitterRegex.split(moduleDir.fileName).toVector.flatMap { part =>
 						// Also splits the module name based on camel casing (e.g. TestModule -> Test & Module)

@@ -7,6 +7,7 @@ import utopia.flow.util.FileExtensions._
 import utopia.flow.util.Version
 
 import java.time.format.DateTimeFormatter
+import scala.io.Codec
 
 /**
  * Used for "closing" the development version in module change documents
@@ -30,7 +31,7 @@ object CloseChangeDocument
 	 * @param module Targeted module
 	 * @return Path to the edited change list document. Failure if change list editing failed.
 	 */
-	def apply(module: Module, summaryLines: Seq[String] = Vector()) =
+	def apply(module: Module, summaryLines: Seq[String] = Vector())(implicit codec: Codec) =
 		module.changeListPath.edit { editor =>
 			// Finds the development version line and overwrites it
 			editor.flatMapNextWhere(developmentVersionLineRegex.apply) { original =>

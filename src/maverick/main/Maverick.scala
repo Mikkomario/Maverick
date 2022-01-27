@@ -9,7 +9,7 @@ import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
 
 import java.nio.file.Path
-import scala.io.StdIn
+import scala.io.{Codec, StdIn}
 import scala.util.{Failure, Success}
 
 /**
@@ -20,6 +20,7 @@ import scala.util.{Failure, Success}
 object Maverick extends App
 {
 	DataType.setup()
+	implicit val codec: Codec = Codec.UTF8
 	
 	// Introduction
 	println("Welcome to Maverick, a program for project exports")

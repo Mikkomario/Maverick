@@ -7,6 +7,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 
 import java.nio.file.Path
+import scala.io.Codec
 import scala.util.Success
 
 /**
@@ -34,7 +35,8 @@ object CollectUpdate
 	 * @return Success or failure
 	 */
 	def apply(updatesDirectory: Path, updates: Seq[ModuleUpdate], notChanged: Seq[ModuleExport] = Vector(),
-	          summaryAdditions: Map[ModuleUpdate, Seq[String]] = Map()) =
+	          summaryAdditions: Map[ModuleUpdate, Seq[String]] = Map())
+	         (implicit codec: Codec) =
 	{
 		// Creates the update directory
 		updatesDirectory.asExistingDirectory.flatMap { updateDir =>
@@ -58,7 +60,8 @@ object CollectUpdate
 	// Call only if there are updates
 	private def writeModules(updatesDirectory: Path, updates: Seq[ModuleUpdate],
 	                         notChanged: Seq[ModuleExport] = Vector(),
-	                         summaryAdditions: Map[ModuleUpdate, Seq[String]] = Map()) =
+	                         summaryAdditions: Map[ModuleUpdate, Seq[String]] = Map())
+	                        (implicit codec: Codec) =
 	{
 		val changeDocumentPath = updatesDirectory/"Changes.md"
 		
@@ -84,7 +87,8 @@ object CollectUpdate
 	}
 	
 	private def writeChanges(path: Path, updates: Iterable[ModuleUpdate], notChanged: Iterable[ModuleExport],
-	                         summaryAdditions: Map[ModuleUpdate, Seq[String]]) =
+	                         summaryAdditions: Map[ModuleUpdate, Seq[String]])
+	                        (implicit codec: Codec) =
 		path.writeUsing { writer =>
 			writer.println("# Summary")
 			writer.println("TODO: Write summary")
@@ -123,7 +127,8 @@ object CollectUpdate
 		}
 	}
 	
-	private def applicationUpdate(outputRoot: Path, application: ModuleUpdate, summaryAdditions: Seq[String]) =
+	private def applicationUpdate(outputRoot: Path, application: ModuleUpdate, summaryAdditions: Seq[String])
+	                             (implicit codec: Codec) =
 	{
 		outputRoot.resolve(s"${application.module.name}-${application.version}").asExistingDirectory
 			.flatMap { dir =>

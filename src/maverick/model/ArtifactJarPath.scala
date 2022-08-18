@@ -1,9 +1,10 @@
 package maverick.model
 
+import utopia.flow.operator.Equatable
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.{Equatable, Version}
+import utopia.flow.util.Version
 
 import java.io.FileNotFoundException
 import java.nio.file.Path

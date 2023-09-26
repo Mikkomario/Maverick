@@ -1,8 +1,8 @@
 package maverick.model
 
-import utopia.flow.operator.Equatable
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.FileExtensions._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.EqualsBy
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.Version
 
@@ -58,7 +58,7 @@ object ArtifactJarPath
  * @author Mikko Hilpinen
  * @since 4.10.2021, v0.1
  */
-class ArtifactJarPath(original: Path, val version: Version, originalIsVersioned: Boolean) extends Equatable
+class ArtifactJarPath(original: Path, val version: Version, originalIsVersioned: Boolean) extends EqualsBy
 {
 	// ATTRIBUTES   -------------------------------
 	
@@ -72,9 +72,8 @@ class ArtifactJarPath(original: Path, val version: Version, originalIsVersioned:
 	val versionedFileName = {
 		if (originalIsVersioned)
 			original.fileName
-		else
-		{
-			val (namePart, extensionPart) = original.fileName.splitAtLast(".")
+		else {
+			val (namePart, extensionPart) = original.fileName.splitAtLast(".").toTuple
 			s"$namePart-$version.$extensionPart"
 		}
 	}
@@ -99,7 +98,7 @@ class ArtifactJarPath(original: Path, val version: Version, originalIsVersioned:
 	
 	// IMPLEMENTED  -----------------------------
 	
-	override def properties = Vector(versionless, versioned)
+	override protected def equalsProperties: Iterable[Any] = Vector(versionless, versioned)
 	
 	
 	// OTHER    ---------------------------------

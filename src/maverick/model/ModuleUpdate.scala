@@ -1,7 +1,7 @@
 package maverick.model
 
 import maverick.model.enumeration.UpdateType
-import utopia.flow.util.Extender
+import utopia.flow.view.template.Extender
 
 /**
  * Represents a module update

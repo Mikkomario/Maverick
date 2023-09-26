@@ -3,8 +3,8 @@ package maverick.controller
 import maverick.model.enumeration.UpdateType
 import maverick.model.enumeration.UpdateType.{Breaking, Overhaul}
 import maverick.model.{ModuleExport, ModuleUpdate}
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.FileExtensions._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.file.FileExtensions._
 
 import java.nio.file.Path
 import scala.io.Codec

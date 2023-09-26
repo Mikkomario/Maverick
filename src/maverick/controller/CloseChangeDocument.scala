@@ -1,9 +1,9 @@
 package maverick.controller
 
 import maverick.model.Module
-import utopia.flow.parse.Regex
+import utopia.flow.parse.string.Regex
 import utopia.flow.time.Today
-import utopia.flow.util.FileExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.Version
 
 import java.time.format.DateTimeFormatter

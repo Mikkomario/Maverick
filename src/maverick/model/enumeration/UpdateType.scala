@@ -1,6 +1,7 @@
 package maverick.model.enumeration
 
-import utopia.flow.util.{SelfComparable, Version}
+import utopia.flow.operator.SelfComparable
+import utopia.flow.util.Version
 
 /**
  * An enumeration for different levels / types of update
@@ -11,7 +12,7 @@ sealed trait UpdateType extends SelfComparable[UpdateType]
 {
 	def changedIndex: Int
 	
-	override def repr = this
+	override def self = this
 	
 	override def compareTo(o: UpdateType) = o.changedIndex - changedIndex
 }

@@ -1,8 +1,8 @@
 package maverick.model
 
 import maverick.model.Module.scalaJarRegex
-import utopia.flow.parse.Regex
-import utopia.flow.util.FileExtensions._
+import utopia.flow.parse.string.Regex
+import utopia.flow.parse.file.FileExtensions._
 
 import java.nio.file.Path
 

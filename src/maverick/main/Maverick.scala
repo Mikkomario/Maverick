@@ -2,10 +2,9 @@ package maverick.main
 
 import maverick.controller.{CheckForUpdates, CloseChangeDocument, CollectUpdate, FindModules}
 import maverick.model.ModuleUpdate
-import utopia.flow.generic.DataType
 import utopia.flow.time.Today
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.FileExtensions._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
 
 import java.nio.file.Path
@@ -19,7 +18,6 @@ import scala.util.{Failure, Success}
  */
 object Maverick extends App
 {
-	DataType.setup()
 	implicit val codec: Codec = Codec.UTF8
 	
 	// Introduction

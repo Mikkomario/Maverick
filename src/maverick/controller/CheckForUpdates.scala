@@ -2,11 +2,11 @@ package maverick.controller
 
 import maverick.model.error.VersionNotFoundException
 import maverick.model.{Module, ModuleExport, ModuleUpdate}
-import utopia.flow.parse.Regex
-import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.FileExtensions._
+import utopia.flow.parse.string.{IterateLines, Regex}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.{IterateLines, Version}
+import utopia.flow.util.Version
 
 /**
  * Checks for model-specific updates
@@ -32,8 +32,7 @@ object CheckForUpdates
 					Version.findFrom(line).map { version =>
 						// checks whether it's a development version or an existing version
 						// Case: A development version => checks for changes list and creates an update
-						if (line.containsIgnoreCase("dev"))
-						{
+						if (line.containsIgnoreCase("dev")) {
 							val changeLines = linesIter.takeWhile { !versionLineRegex(_) }.toVector
 								.dropRightWhile { _.isEmpty }
 							Right((version, changeLines))

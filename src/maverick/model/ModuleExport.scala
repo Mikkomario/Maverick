@@ -1,6 +1,6 @@
 package maverick.model
 
-import utopia.flow.util.CollectionExtensions._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.Version
 
 import scala.util.Success

@@ -6,6 +6,7 @@ import utopia.flow.time.Today
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import java.nio.file.Path
 import scala.io.{Codec, StdIn}
@@ -18,15 +19,15 @@ import scala.util.{Failure, Success}
  */
 object Maverick extends App
 {
-	implicit val codec: Codec = Codec.UTF8
+	private implicit val log: Logger = SysErrLogger
+	private implicit val codec: Codec = Codec.UTF8
 	
 	// Introduction
 	println("Welcome to Maverick, a program for project exports")
 	println("You can close the program at any time by writing 'exit' as input (without quotations)")
 	println()
 	
-	def ask(question: String) =
-	{
+	private def ask(question: String) = {
 		println(question)
 		val result = StdIn.readLine()
 		if (result.toLowerCase == "exit")
@@ -34,8 +35,7 @@ object Maverick extends App
 		println()
 		result
 	}
-	def askBoolean(question: String, default: Boolean = false) =
-	{
+	private def askBoolean(question: String, default: Boolean = false) = {
 		val answer = ask(question + s" (y/n, default = ${if (default) "yes" else "no"})").toLowerCase
 		if (answer.startsWith("y"))
 			true
@@ -59,28 +59,23 @@ object Maverick extends App
 	}
 	
 	// Finds the modules
-	FindModules(projectDirectory) match
-	{
+	FindModules(projectDirectory) match {
 		case Success((modules, missing)) =>
 			// Checks whether there are incomplete modules and whether export should be terminated
-			if (missing.nonEmpty)
-			{
-				if (modules.isEmpty)
-				{
+			if (missing.nonEmpty) {
+				if (modules.isEmpty) {
 					println(s"It looks like all the ${missing.size} modules were missing an artifact directory.")
 					println("Please build project artifacts and try again.")
 					System.exit(0)
 				}
-				else
-				{
+				else {
 					println(s"No artifact directory was found for the following modules: ${missing.mkString(", ")}")
 					if (!askBoolean("Do you still want to continue the export process?"))
 						System.exit(0)
 				}
 			}
 			// Makes sure some modules were found
-			else if (modules.isEmpty)
-			{
+			else if (modules.isEmpty) {
 				println("No modules could be found from that directory")
 				println("Modules are directories which contain a change list document " +
 					"(document must contain the word 'change' and be of type .md)")
@@ -90,18 +85,15 @@ object Maverick extends App
 			
 			// Checks for module updates
 			println(s"Found ${modules.size} modules: [${modules.map { _.name }.mkString(", ")}]")
-			modules.tryMap { CheckForUpdates(_) } match
-			{
+			modules.tryMap { CheckForUpdates(_) } match {
 				case Success(results) =>
 					val (notChanged, updated) = results.divided
 					if (updated.isEmpty)
 						println("It looks like no module was updated (no 'dev' versions found). Please try again.")
-					else
-					{
+					else {
 						// Makes sure the "static" modules were not changed in their jar paths either
 						val warningCases = notChanged.filter { _.jarPath.exists { _.changesSize } }
-						if (warningCases.nonEmpty)
-						{
+						if (warningCases.nonEmpty) {
 							println(s"Following modules were not listed as changed but had their jar files updated anyway: ${
 								warningCases.map { _.module.name }.mkString(", ") }")
 							println("It is possible that some changes haven't been documented in these modules")
@@ -110,8 +102,7 @@ object Maverick extends App
 						}
 						
 						// Lists status and makes sure user wants to continue
-						if (notChanged.nonEmpty)
-						{
+						if (notChanged.nonEmpty) {
 							println("Following modules were NOT changed:")
 							notChanged.foreach { exp => println(s"- ${exp.module.name} ${exp.version}") }
 						}
@@ -133,8 +124,7 @@ object Maverick extends App
 							default = true))
 						{
 							// Checks whether the user would like to fill in the missing summaries (if there are any)
-							val addedSummaries: Map[ModuleUpdate, Vector[String]] =
-							{
+							val addedSummaries: Map[ModuleUpdate, Vector[String]] = {
 								// Case: No summaries are missing or the user doesn't want to write any => continues
 								if (missingSummaryModules.isEmpty || !askBoolean(s"Do you want to write the ${
 									missingSummaryModules.size} summaries now?"))
@@ -159,8 +149,7 @@ object Maverick extends App
 							val targetDirectory = ask(s"Please specify the directory where data should be collected (default = $defaultDirectory)")
 								.notEmpty.map[Path] { s => s }.getOrElse(defaultDirectory)
 							
-							CollectUpdate(targetDirectory, updated, notChanged, addedSummaries) match
-							{
+							CollectUpdate(targetDirectory, updated, notChanged, addedSummaries) match {
 								case Success(_) =>
 									println("Update collected successfully")
 									targetDirectory.openInDesktop()
@@ -177,8 +166,7 @@ object Maverick extends App
 										}
 										val failureResults = closeResults
 											.flatMap { case (update, result) => result.failure.map { update -> _ } }
-										if (failureResults.nonEmpty)
-										{
+										if (failureResults.nonEmpty) {
 											failureResults.head._2.printStackTrace()
 											println(s"Failed to update change list documents in following modules: [${
 												failureResults.map { _._1.module.name }

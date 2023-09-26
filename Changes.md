@@ -2,6 +2,7 @@
 
 ## v1.0.1 (in development)
 ### Other Changes
+- Nested project directories are now supported
 - Added **UpdateType** **Other**, which is used when version suffix changes
 - Updates are now ordered from greater to smaller, as intended originally
 - The update directory is now opened **before** the last question about closing the update 

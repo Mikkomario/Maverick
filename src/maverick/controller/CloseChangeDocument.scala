@@ -18,7 +18,10 @@ object CloseChangeDocument
 {
 	// ATTRIBUTES   ----------------------------
 	
-	private val dateFormat = DateTimeFormatter.ofPattern("dd.MM.uuuu")
+	/**
+	 * Format used when writing version release date
+	 */
+	val dateFormat = DateTimeFormatter.ofPattern("dd.MM.uuuu")
 	
 	private val developmentVersionLineRegex = Regex.escape('#') + Regex.any + Version.regex +
 		Regex.any + Regex("dev") + Regex.any

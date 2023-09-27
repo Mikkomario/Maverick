@@ -51,8 +51,7 @@ object Maverick extends App
 			println("Please specify the project directory to export")
 			ask(s"Current directory: ${"".toAbsolutePath}")
 		}
-	if (!projectDirectory.isDirectory)
-	{
+	if (!projectDirectory.isDirectory) {
 		println(s"The project path you specified (${
 			projectDirectory.toAbsolutePath}) is not an existing directory. Please try again.")
 		System.exit(0)

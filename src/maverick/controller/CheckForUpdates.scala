@@ -5,6 +5,7 @@ import maverick.model.{Module, ModuleExport, ModuleUpdate}
 import utopia.flow.parse.string.{IterateLines, Regex}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.time.Today
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.Version
 
@@ -23,16 +24,18 @@ object CheckForUpdates
 	 * @return Either Left: Latest module export or Right: Pending module update.
 	 *         Failure if no version data was found or if no proper jar files were found.
 	 */
-	def apply(module: Module) =
-	{
+	def apply(module: Module) = {
 		// Reads the change list document and finds the latest version (line / range)
 		IterateLines.fromPath(module.changeListPath) { linesIter =>
 			linesIter.nextWhere { versionLineRegex(_) }
 				.flatMap { line =>
 					Version.findFrom(line).map { version =>
 						// checks whether it's a development version or an existing version
+						// Also counts today's releases as development versions (modified release use-case)
 						// Case: A development version => checks for changes list and creates an update
-						if (line.containsIgnoreCase("dev")) {
+						if (line.containsIgnoreCase("dev") ||
+							line.contains(CloseChangeDocument.dateFormat.format(Today.toLocalDate)))
+						{
 							val changeLines = linesIter.takeWhile { !versionLineRegex(_) }.toVector
 								.dropRightWhile { _.isEmpty }
 							Right((version, changeLines))

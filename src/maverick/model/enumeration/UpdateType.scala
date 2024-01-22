@@ -1,6 +1,6 @@
 package maverick.model.enumeration
 
-import utopia.flow.operator.SelfComparable
+import utopia.flow.operator.ordering.SelfComparable
 import utopia.flow.util.Version
 
 /**

@@ -1,7 +1,7 @@
 package maverick.model
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.EqualsBy
+import utopia.flow.operator.equality.EqualsBy
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.Version

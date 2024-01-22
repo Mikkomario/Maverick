@@ -42,7 +42,7 @@ object CollectUpdate
 		updatesDirectory.asExistingDirectory.flatMap { updateDir =>
 			
 			// Divides the updates into application and module changes
-			val (moduleUpdates, applicationUpdates) = updates.divideBy { _.isApplication }
+			val (moduleUpdates, applicationUpdates) = updates.divideBy { _.isApplication }.toTuple
 			val unchangedModules = notChanged.filterNot { _.isApplication }
 			
 			// Writes the module changes, if there are any

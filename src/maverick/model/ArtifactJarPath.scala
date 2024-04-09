@@ -98,7 +98,7 @@ class ArtifactJarPath(original: Path, val version: Version, originalIsVersioned:
 	
 	// IMPLEMENTED  -----------------------------
 	
-	override protected def equalsProperties: Iterable[Any] = Vector(versionless, versioned)
+	override protected def equalsProperties = Vector(versionless, versioned)
 	
 	
 	// OTHER    ---------------------------------

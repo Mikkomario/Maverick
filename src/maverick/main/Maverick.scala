@@ -1,11 +1,13 @@
 package maverick.main
 
 import maverick.controller.{CheckForUpdates, CloseChangeDocument, CollectUpdate, FindModules}
-import maverick.model.ModuleUpdate
-import utopia.flow.time.Today
+import maverick.model.{ModuleExport, ModuleUpdate}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.util.StringExtensions._
+import utopia.flow.time.Today
+import utopia.flow.util.EitherExtensions._
+import utopia.flow.util.TryCatch
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 
 import java.nio.file.Path
@@ -84,10 +86,17 @@ object Maverick extends App
 			
 			// Checks for module updates
 			println(s"Found ${modules.size} modules: [${modules.map { _.name }.mkString(", ")}]")
-			modules.tryMap { CheckForUpdates(_) } match {
-				case Success(results) =>
+			modules.map { CheckForUpdates(_) }.toTryCatch match {
+				case TryCatch.Success(results: Seq[Either[ModuleExport, ModuleUpdate]], errors) =>
+					errors.headOption.foreach { error =>
+						error.printStackTrace()
+						println(s"Failed to process ${ errors.size } of the ${ modules.size } modules")
+					}
+					
 					val (notChanged, updated) = results.divided
-					if (updated.isEmpty)
+					if (errors.nonEmpty && !askBoolean("Do you want to continue anyway?"))
+						println("Export canceled")
+					else if (updated.isEmpty)
 						println("It looks like no module was updated (no 'dev' versions found). Please try again.")
 					else {
 						// Makes sure the "static" modules were not changed in their jar paths either
@@ -183,7 +192,7 @@ object Maverick extends App
 						else
 							println("Okay. Please run this program again when you're ready to perform the export.")
 					}
-				case Failure(error) =>
+				case TryCatch.Failure(error) =>
 					error.printStackTrace()
 					println(s"An error occurred while checking for updates (more details above): ${error.getMessage}")
 			}

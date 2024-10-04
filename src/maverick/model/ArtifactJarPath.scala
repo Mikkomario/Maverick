@@ -36,8 +36,7 @@ object ArtifactJarPath
 	def findFrom(directory: Path, searchedVersion: Version, isLatest: Boolean = true) =
 		directory.allRegularFileChildrenOfType("jar").flatMap { files =>
 			// Tries to find a versionless jar first (only applicable if this is the latest version)
-			val withoutVersion =
-			{
+			val withoutVersion = {
 				if (isLatest)
 					files.find { file => !Version.regex.existsIn(file.fileName) }
 						.map { versionless(_, searchedVersion) }
@@ -108,8 +107,7 @@ class ArtifactJarPath(original: Path, val version: Version, originalIsVersioned:
 	 * @param directory Directory where this jar is copied to
 	 * @return New jar path. Failure if file copy failed.
 	 */
-	def copyTo(directory: Path) = versionless.filter { _.exists } match
-	{
+	def copyTo(directory: Path) = versionless.filter { _.exists } match {
 		case Some(versionless) =>
 			// Updates artifact jar name to include versioning, then copies it to the target directory
 			versionless.rename(versionedFileName, allowOverwrite = true).flatMap { _.copyTo(directory) }

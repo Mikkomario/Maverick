@@ -8,6 +8,7 @@ import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.Today
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.Version
+import utopia.flow.util.EitherExtensions._
 
 /**
  * Checks for model-specific updates

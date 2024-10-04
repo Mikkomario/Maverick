@@ -1,6 +1,6 @@
 package maverick.model
 
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.Version
 
 import scala.util.Success
@@ -26,11 +26,9 @@ object ModuleExport
 	 * Creates a module export based on a specific version number and module artifact files
 	 * @param module Described module
 	 * @param version Exported version
-	 * @param isLatest Whether this is / should be the latest module version
 	 * @return A module export. Failure if exported module jars were not found.
 	 */
-	def findFor(module: Module, version: Version, isLatest: Boolean = true) =
-	{
+	def findFor(module: Module, version: Version) = {
 		if (module.isApplication)
 			Success(application(module, version))
 		else

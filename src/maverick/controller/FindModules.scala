@@ -16,7 +16,7 @@ import java.nio.file.Path
  */
 object FindModules
 {
-	private val changeListDocumentNameRegex = Regex.any + (Regex("c") || Regex("C")).withinParenthesis +
+	private val changeListDocumentNameRegex = Regex.any + (Regex("c") || Regex("C")).withinParentheses +
 		Regex("hange") + Regex.any + Regex.escape('.') + Regex("md")
 	private val nameSplitterRegex = Regex.escape('-') || Regex.escape('_')
 	
